@@ -8,6 +8,7 @@
  */
 
 #include "RC5.h"
+#include <avr/io.h>
 
 #define MIN_SHORT  444
 #define MAX_SHORT 1333
@@ -71,10 +72,13 @@ const unsigned char trans[] = {0x01,
                                0x9B,  
                                0xFB};
 
-RC5::RC5(unsigned char pin)
-{
-    this->pin = pin;
-    pinMode(pin, INPUT_PULLUP);
+RC5::RC5() {
+    //DDRD(pin, INPUT_PULLUP);
+    /* Reset Timer1 Counter */
+    TCCR1A = 0;
+    /* Enable Timer1 in normal mode with /8 clock prescaling */
+    /* One tick is 500ns with 16MHz clock */
+    TCCR1B = _BV(CS11);
     this->reset();
 }
 
@@ -83,7 +87,7 @@ void RC5::reset()
     this->state = STATE_MID1;
     this->bits = 1;  // emit a 1 at start - see state machine graph
     this->command = 1;
-    this->time0 = micros();
+    this->time0 = TCNT1;
 }
 
 void RC5::decodePulse(unsigned char signal, unsigned long period)
@@ -127,10 +131,10 @@ bool RC5::read(unsigned int *message)
        is equal to the theoretical (uninverted) signal value of the time period that
        has just ended.
     */
-    int value = digitalRead(this->pin);
+    int value = !!(PIND & (1<<2));
     
     if (value != this->lastValue) {
-        unsigned long time1 = micros();
+        unsigned long time1 = TCNT1;
         unsigned long elapsed = time1-this->time0;
         this->time0 = time1;
         this->lastValue = value;

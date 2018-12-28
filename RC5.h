@@ -10,8 +10,6 @@
 #ifndef RC5_h
 #define RC5_h
 
-#include <Arduino.h>
-
 class RC5
 {
  public:
@@ -22,7 +20,7 @@ class RC5
     unsigned int bits;
     unsigned int command;
 
-    RC5(unsigned char pin);
+    RC5();
     void reset();
     bool read(unsigned int *message);
     bool read(unsigned char *toggle, unsigned char *address, unsigned char *command);
