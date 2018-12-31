@@ -123,16 +123,16 @@ void RC5::decodeEvent(unsigned char event)
     }
 }
 
-bool RC5::read(unsigned int *message)
-{
+void RC5::inputChanged(int value) {
     /* Note that the input value read is inverted from the theoretical signal,
        ie we get 1 while no signal present, pulled to 0 when a signal is detected.
        So when the value changes, the inverted value that we get from reading the pin
        is equal to the theoretical (uninverted) signal value of the time period that
        has just ended.
     */
-    int value = !!(PIND & (1<<2));
-    
+    if (this->bits == 14) {
+      return;
+    }
     if (value != this->lastValue) {
         unsigned long time1 = TCNT1;
         unsigned long elapsed = time1-this->time0;
@@ -140,7 +140,10 @@ bool RC5::read(unsigned int *message)
         this->lastValue = value;
         this->decodePulse(value, elapsed);
     }
+}    
     
+bool RC5::read(unsigned int *message)
+{
     if (this->bits == 14) {
         *message = this->command;
         this->command = 0;
