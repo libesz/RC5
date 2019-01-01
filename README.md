@@ -1,7 +1,7 @@
-Arduino RC5 remote control decoder library
+AVR C++ RC5 remote control decoder library
 ==========================================
 
-This is an Arduino library for decoding infrared remote control commands encoded
+This is a C++ library for decoding infrared remote control commands encoded
 with the Philips RC5 protocol.  It is based on the article
 "An Efficient Algorithm for Decoding RC5 Remote Control Signals"
 by Guy Carpenter, Oct 2001.
@@ -13,47 +13,9 @@ stop bit S2 as an extension to the command value.
 
 See also http://www.sbprojects.com/knowledge/ir/rc5.php
 
-Using the Library
------------------
+This is a fork of the original Arduino library version, which can be found here: https://github.com/guyc/RC5
+I removed the Arduino dependency to enable the usage with pure avr-g++ and avr-libc. Also, I did some other slight changes on the class interface.
 
-```C++
-
-#include <RC5.h>
-#define IR_PIN 7
-RC5 rc5(IR_PIN);
-
-void loop() {
-  if (rc5.read(&toggle, &address, &command))
-  {
-    Serial.print(address);
-    Serial.print(",");
-    Serial.print(command);
-    Serial.println(toggle ? " (t) " : "");
-  }
-}
-
-```
-
-Pressing the power button on the remote control twice produces this output:
-```
-0,12 (t) 
-0,12 (t) 
-0,12
-0,12
-```
-which is address 0 (TV1), command 12 (Standby)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+TODO:
+* add new/valid C++ example
+* maybe create some callback interfaces/logic

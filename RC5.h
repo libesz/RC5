@@ -10,6 +10,10 @@
 #ifndef RC5_h
 #define RC5_h
 
+/* This include shall deliver the missing compiler and standard lib functions,
+ * which are not available in case of avr-g++ compilation.
+ * See: https://www.avrfreaks.net/comment/341297#comment-341297
+ */
 #include "CppStubs.h"
 
 class RC5
