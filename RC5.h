@@ -10,6 +10,8 @@
 #ifndef RC5_h
 #define RC5_h
 
+#include "CppStubs.h"
+
 class RC5
 {
  public:
