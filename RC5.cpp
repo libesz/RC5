@@ -39,12 +39,6 @@
  */
 #define S2_MASK       0x1000  // 1 bit
 #define S2_SHIFT      12
-#define TOGGLE_MASK   0x0800  // 1 bit 
-#define TOGGLE_SHIFT  11
-#define ADDRESS_MASK  0x7C0  //  5 bits
-#define ADDRESS_SHIFT 6
-#define COMMAND_MASK  0x003F //  low 6 bits
-#define COMMAND_SHIFT 0
 
 
 /* trans[] is a table of transitions, indexed by
@@ -67,12 +61,12 @@
  * 10 01 10 11  from state 2: short space->3, long space->1
  * 11 11 10 11  from state 3: short pulse->2
  */
-const unsigned char trans[] = {0x01,
+const uint8_t trans[] = {0x01,
                                0x91,  
                                0x9B,  
                                0xFB};
 
-RC5::RC5() {
+RC5::RC5(RC5Handler *newHandler): handler(newHandler) {
     //DDRD(pin, INPUT_PULLUP);
     /* Reset Timer1 Counter */
     TCCR1A = 0;
@@ -90,7 +84,7 @@ void RC5::reset()
     this->time0 = TCNT1;
 }
 
-void RC5::decodePulse(unsigned char signal, unsigned long period)
+void RC5::decodePulse(uint8_t signal, uint32_t period)
 {
     if (period >= MIN_SHORT && period <= MAX_SHORT) {
         this->decodeEvent(signal ? EVENT_SHORTPULSE : EVENT_SHORTSPACE);
@@ -102,10 +96,10 @@ void RC5::decodePulse(unsigned char signal, unsigned long period)
     }
 }
 
-void RC5::decodeEvent(unsigned char event)
+void RC5::decodeEvent(uint8_t event)
 {
     // find next state, 2 bits
-    unsigned char newState = (trans[this->state]>>event) & 0x3;
+    uint8_t newState = (trans[this->state]>>event) & 0x3;
     if (newState==this->state) {
         // no state change indicates error, reset
         this->reset();
@@ -123,26 +117,30 @@ void RC5::decodeEvent(unsigned char event)
     }
 }
 
-void RC5::inputChanged(int value) {
+void RC5::inputChanged(uint8_t value) {
     /* Note that the input value read is inverted from the theoretical signal,
        ie we get 1 while no signal present, pulled to 0 when a signal is detected.
        So when the value changes, the inverted value that we get from reading the pin
        is equal to the theoretical (uninverted) signal value of the time period that
        has just ended.
     */
-    if (this->bits == 14) {
-      return;
-    }
     if (value != this->lastValue) {
-        unsigned long time1 = TCNT1;
-        unsigned long elapsed = time1-this->time0;
+        uint32_t time1 = TCNT1;
+        uint32_t elapsed = time1-this->time0;
         this->time0 = time1;
         this->lastValue = value;
         this->decodePulse(value, elapsed);
     }
+    
+    if (this->bits == 14) {
+      uint16_t message;
+      if(read(&message)) {
+        handler->commandReceived(message);
+      }        
+    }
 }    
     
-bool RC5::read(unsigned int *message)
+bool RC5::read(uint16_t *message)
 {
     if (this->bits == 14) {
         *message = this->command;
@@ -154,16 +152,16 @@ bool RC5::read(unsigned int *message)
     }
 }
 
-bool RC5::read(unsigned char *toggle, unsigned char *address, unsigned char *command)
+bool RC5::read(uint8_t *toggle, uint8_t *address, uint8_t *command)
 {
-    unsigned int message;
+    uint16_t message;
     if (this->read(&message)) {
         *toggle  = (message & TOGGLE_MASK ) >> TOGGLE_SHIFT;
         *address = (message & ADDRESS_MASK) >> ADDRESS_SHIFT;
         
         // Support for extended RC5:
         // to get extended command, invert S2 and shift into command's 7th bit
-        unsigned char extended;
+        uint8_t extended;
         extended = (~message & S2_MASK) >> (S2_SHIFT - 7);
         *command = ((message & COMMAND_MASK) >> COMMAND_SHIFT) | extended;
         
