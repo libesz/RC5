@@ -125,8 +125,8 @@ void RC5::inputChanged(uint8_t value) {
        has just ended.
     */
     if (value != this->lastValue) {
-        uint32_t time1 = TCNT1;
-        uint32_t elapsed = time1-this->time0;
+        uint16_t time1 = TCNT1;
+        uint16_t elapsed = time1-this->time0;
         this->time0 = time1;
         this->lastValue = value;
         this->decodePulse(value, elapsed);
