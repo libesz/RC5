@@ -11,6 +11,17 @@
 
 #include "RC5.h"
 
+class RC5RateLimiter {
+  public:
+  virtual bool grant() = 0;
+};
+
+class RC5StorageHandler {
+  public:
+  virtual void save(const uint16_t commands[], uint8_t length) = 0;
+  virtual void load(uint16_t commands[], uint8_t length) = 0;
+};
+
 class RC5CommandHandler {
   public:
   virtual void buttonPressed() = 0;
@@ -28,18 +39,31 @@ template<uint8_t T_SIZE> class RC5Controller: public RC5Handler {
   RC5CommandHandler *handlers[T_SIZE];
   uint16_t commands[T_SIZE];
   RC5LearningHook *hook;
+  RC5StorageHandler *storageHandler;
+  RC5RateLimiter *limiter;
   int8_t learningIndex;
 public:
-	RC5Controller(RC5LearningHook *newHook): hook(newHook), learningIndex(-1) {};
+	RC5Controller(RC5LearningHook *newHook,
+                RC5StorageHandler *newStorageHandler,
+                RC5RateLimiter *newLimiter): hook(newHook),
+                                             storageHandler(newStorageHandler),
+                                             limiter(newLimiter),
+                                             learningIndex(-1) {
+    storageHandler->load(commands, T_SIZE);
+  };
 	~RC5Controller() {};
   void commandReceived(uint16_t message) {
     message &= ~(TOGGLE_MASK);
+    if(!limiter->grant()) {
+      return;
+    }
     if(learningIndex >=0) {
       hook->doneLearningOf(learningIndex, message);
       setCommand(learningIndex, message);
       if(++learningIndex < T_SIZE) {
         hook->startLearningOf(learningIndex);
-      } else {        
+      } else {
+        storageHandler->save(commands, T_SIZE);
         learningIndex = -1;
       }
     } else {
