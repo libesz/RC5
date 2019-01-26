@@ -38,14 +38,14 @@ template<uint8_t T_SIZE> class RC5Controller: public RC5Handler {
 	RC5Controller& operator=( const RC5Controller &c );
   RC5CommandHandler *handlers[T_SIZE];
   uint16_t commands[T_SIZE];
-  RC5LearningHook *hook;
+  RC5LearningHook *learningHook;
   RC5StorageHandler *storageHandler;
   RC5RateLimiter *limiter;
   int8_t learningIndex;
 public:
-	RC5Controller(RC5LearningHook *newHook,
+	RC5Controller(RC5LearningHook *newLearningHook,
                 RC5StorageHandler *newStorageHandler,
-                RC5RateLimiter *newLimiter): hook(newHook),
+                RC5RateLimiter *newLimiter): learningHook(newLearningHook),
                                              storageHandler(newStorageHandler),
                                              limiter(newLimiter),
                                              learningIndex(-1) {
@@ -58,10 +58,10 @@ public:
       return;
     }
     if(learningIndex >=0) {
-      hook->doneLearningOf(learningIndex, message);
+      learningHook->doneLearningOf(learningIndex, message);
       setCommand(learningIndex, message);
       if(++learningIndex < T_SIZE) {
-        hook->startLearningOf(learningIndex);
+        learningHook->startLearningOf(learningIndex);
       } else {
         storageHandler->save(commands, T_SIZE);
         learningIndex = -1;
@@ -83,7 +83,7 @@ public:
   }
   void startLearningAll() {
     learningIndex = 0;
-    hook->startLearningOf(0);
+    learningHook->startLearningOf(0);
   }
 };
 
