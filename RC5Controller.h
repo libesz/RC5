@@ -24,7 +24,7 @@ class RC5StorageHandler {
 
 class RC5CommandHandler {
   public:
-  virtual void buttonPressed() = 0;
+  virtual void buttonPressed() const = 0;
 };
 
 class RC5LearningHook {
@@ -36,7 +36,7 @@ class RC5LearningHook {
 template<uint8_t T_SIZE> class RC5Controller: public RC5Handler {
   RC5Controller( const RC5Controller &c );
 	RC5Controller& operator=( const RC5Controller &c );
-  RC5CommandHandler *handlers[T_SIZE];
+  const RC5CommandHandler *handlers[T_SIZE];
   uint16_t commands[T_SIZE];
   RC5LearningHook *learningHook;
   RC5StorageHandler *storageHandler;
@@ -75,10 +75,10 @@ public:
       } while(++i < T_SIZE);
     }    
   }
-  void setHandler(uint8_t index, RC5CommandHandler *handler) {
+  void setHandler(uint8_t index, const RC5CommandHandler *handler) {
     handlers[index] = handler;
   }
-  void setCommand(uint8_t index, uint16_t command) {
+  void setCommand(const uint8_t index, const uint16_t command) {
     commands[index] = command;
   }
   void startLearningAll() {
