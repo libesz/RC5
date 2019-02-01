@@ -32,7 +32,7 @@ public:
 class RC5 {
     uint8_t pin;
     uint8_t state;
-    uint32_t time0;
+    uint16_t time0;
     uint32_t lastValue;
     uint16_t bits;
     uint16_t command;
