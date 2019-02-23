@@ -85,6 +85,9 @@ public:
     learningIndex = 0;
     learningHook->startLearningOf(0);
   }
+  bool isLearningOngoing() {
+    return !(learningIndex==-1);
+  }
 };
 
 #endif //__RC5CONTROLLER_H__
